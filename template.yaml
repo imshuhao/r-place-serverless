@@ -9,24 +9,30 @@ Description: >
 Parameters:
   TableName:
     Type: String
-    Default: 'simplechat_connections'
+    Default: 'app_connections'
     Description: (Required) The name of the new DynamoDB to store connection identifiers for each connected clients. Minimum 3 characters
     MinLength: 3
     MaxLength: 50
     AllowedPattern: ^[A-Za-z_]+$
     ConstraintDescription: 'Required. Can be characters and underscore only. No numbers or special characters allowed.'
+  # VPC:
+  #   Description: The VPC for Lambda function and ElastiCache.
+  #   Type: AWS::EC2::VPC::Id
+  # Subnets:
+  #   Description: The Subnets for Lambda function and ElastiCache.
+  #   Type: List<AWS::EC2::Subnet::Id>
 
 Resources:
-  SimpleChatWebSocket:
+  PlaceWebSocket:
     Type: AWS::ApiGatewayV2::Api
     Properties:
-      Name: SimpleChatWebSocket
+      Name: PlaceWebSocket
       ProtocolType: WEBSOCKET
       RouteSelectionExpression: "$request.body.action"
   ConnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
-      ApiId: !Ref SimpleChatWebSocket
+      ApiId: !Ref PlaceWebSocket
       RouteKey: $connect
       AuthorizationType: NONE
       OperationName: ConnectRoute
@@ -37,7 +43,7 @@ Resources:
   ConnectInteg:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
-      ApiId: !Ref SimpleChatWebSocket
+      ApiId: !Ref PlaceWebSocket
       Description: Connect Integration
       IntegrationType: AWS_PROXY
       IntegrationUri: 
@@ -46,7 +52,7 @@ Resources:
   DisconnectRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
-      ApiId: !Ref SimpleChatWebSocket
+      ApiId: !Ref PlaceWebSocket
       RouteKey: $disconnect
       AuthorizationType: NONE
       OperationName: DisconnectRoute
@@ -57,7 +63,7 @@ Resources:
   DisconnectInteg:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
-      ApiId: !Ref SimpleChatWebSocket
+      ApiId: !Ref PlaceWebSocket
       Description: Disconnect Integration
       IntegrationType: AWS_PROXY
       IntegrationUri: 
@@ -66,7 +72,7 @@ Resources:
   SendRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
-      ApiId: !Ref SimpleChatWebSocket
+      ApiId: !Ref PlaceWebSocket
       RouteKey: sendmessage
       AuthorizationType: NONE
       OperationName: SendRoute
@@ -77,7 +83,7 @@ Resources:
   SendInteg:
     Type: AWS::ApiGatewayV2::Integration
     Properties:
-      ApiId: !Ref SimpleChatWebSocket
+      ApiId: !Ref PlaceWebSocket
       Description: Send Integration
       IntegrationType: AWS_PROXY
       IntegrationUri: 
@@ -90,14 +96,16 @@ Resources:
     - SendRoute
     - DisconnectRoute
     Properties:
-      ApiId: !Ref SimpleChatWebSocket
+      ApiId: !Ref PlaceWebSocket
   Stage:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
       StageName: Prod
       Description: Prod Stage
       DeploymentId: !Ref Deployment
-      ApiId: !Ref SimpleChatWebSocket
+      ApiId: !Ref PlaceWebSocket
+
+
   ConnectionsTable:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -107,12 +115,44 @@ Resources:
       KeySchema:
       - AttributeName: "connectionId"
         KeyType: "HASH"
-      ProvisionedThroughput:
-        ReadCapacityUnits: 5
-        WriteCapacityUnits: 5
+      # ProvisionedThroughput:
+      #   ReadCapacityUnits: 5
+      #   WriteCapacityUnits: 5
+      BillingMode: PAY_PER_REQUEST
       SSESpecification:
         SSEEnabled: True
       TableName: !Ref TableName
+
+  DynamoDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "update"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "update"
+          KeyType: "HASH"
+      # ProvisionedThroughput:
+      #   ReadCapacityUnits: 5
+      #   WriteCapacityUnits: 5
+      BillingMode: PAY_PER_REQUEST
+      # TableName: !Ref 'AWS::StackName'
+      TableName: 'operations'
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+
+  # ElastiCacheSecurityGroup:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupDescription: Elasticache Security Group
+  #     VpcId: !Ref 'VPC'
+  #     SecurityGroupIngress:
+  #       - IpProtocol: tcp
+  #         FromPort: '6379'
+  #         ToPort: '6379'
+  #         SourceSecurityGroupId: !Ref 'LambdaSecurityGroup'
+
   OnConnectFunction:
     Type: AWS::Serverless::Function
     Properties:
@@ -129,7 +169,7 @@ Resources:
   OnConnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
-      - SimpleChatWebSocket
+      - PlaceWebSocket
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref OnConnectFunction
@@ -150,7 +190,7 @@ Resources:
   OnDisconnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
-      - SimpleChatWebSocket
+      - PlaceWebSocket
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref OnDisconnectFunction
@@ -173,15 +213,18 @@ Resources:
           Action:
           - 'execute-api:ManageConnections'
           Resource:
-          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${SimpleChatWebSocket}/*'
+          - !Sub 'arn:aws:execute-api:${AWS::Region}:${AWS::AccountId}:${PlaceWebSocket}/*'
   SendMessagePermission:
     Type: AWS::Lambda::Permission
     DependsOn:
-      - SimpleChatWebSocket
+      - PlaceWebSocket
     Properties:
       Action: lambda:InvokeFunction
       FunctionName: !Ref SendMessageFunction
       Principal: apigateway.amazonaws.com
+
+
+
 
 Outputs:
   ConnectionsTableArn:
@@ -202,4 +245,4 @@ Outputs:
 
   WebSocketURI:
     Description: "The WSS Protocol URI to connect to"
-    Value: !Join [ '', [ 'wss://', !Ref SimpleChatWebSocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage'] ]
+    Value: !Join [ '', [ 'wss://', !Ref PlaceWebSocket, '.execute-api.',!Ref 'AWS::Region','.amazonaws.com/',!Ref 'Stage'] ]

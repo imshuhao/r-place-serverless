@@ -7,6 +7,8 @@ const ddb = new AWS.DynamoDB.DocumentClient({ apiVersion: '2012-08-10', region: 
 
 const { TABLE_NAME } = process.env;
 
+const OP_DB = "operations"
+
 exports.handler = async event => {
   let connectionData;
   
@@ -22,7 +24,21 @@ exports.handler = async event => {
   });
   
   const postData = JSON.parse(event.body).data;
-  
+
+  // const putData = {
+  //   TableName: OP_DB,
+  //   Item: {
+  //     postData: postData
+  //   }
+  // };
+
+  // try {
+  //   await ddb.put(putData).promise();
+  // } catch (err) {
+  //   return { statusCode: 500, body: 'Failed to store data: ' + JSON.stringify(err)};
+  // }
+
+
   const postCalls = connectionData.Items.map(async ({ connectionId }) => {
     try {
       await apigwManagementApi.postToConnection({ ConnectionId: connectionId, Data: postData }).promise();
