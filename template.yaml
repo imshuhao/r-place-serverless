@@ -123,23 +123,46 @@ Resources:
         SSEEnabled: True
       TableName: !Ref TableName
 
-  DynamoDB:
+  UpdateHistoryDB:
     Type: AWS::DynamoDB::Table
     Properties:
       AttributeDefinitions:
-        - AttributeName: "update"
+        - AttributeName: "connID"
           AttributeType: "S"
+        - AttributeName: "timestamp"
+          AttributeType: "N"
       KeySchema:
-        - AttributeName: "update"
+        - AttributeName: "connID"
+          KeyType: "HASH"
+        - AttributeName: "timestamp"
+          KeyType: "RANGE"
+      # ProvisionedThroughput:
+      #   ReadCapacityUnits: 5
+      #   WriteCapacityUnits: 5
+      BillingMode: PAY_PER_REQUEST
+      # TableName: !Ref 'AWS::StackName'
+      TableName: 'UpdateHistory'
+      StreamSpecification:
+        StreamViewType: NEW_IMAGE
+
+  BitmapDB:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "board_row"
+          AttributeType: "N"
+      KeySchema:
+        - AttributeName: "board_row"
           KeyType: "HASH"
       # ProvisionedThroughput:
       #   ReadCapacityUnits: 5
       #   WriteCapacityUnits: 5
       BillingMode: PAY_PER_REQUEST
       # TableName: !Ref 'AWS::StackName'
-      TableName: 'operations'
+      TableName: 'Bitmap'
       StreamSpecification:
         StreamViewType: NEW_IMAGE
+
 
 
   # ElastiCacheSecurityGroup:
@@ -159,13 +182,14 @@ Resources:
       CodeUri: onconnect/
       Handler: app.handler
       MemorySize: 256
+      Timeout: 30
       Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableName
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableName
+          TableName: "*"
   OnConnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -180,13 +204,14 @@ Resources:
       CodeUri: ondisconnect/
       Handler: app.handler
       MemorySize: 256
+      Timeout: 30
       Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableName
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableName
+          TableName: "*"
   OnDisconnectPermission:
     Type: AWS::Lambda::Permission
     DependsOn:
@@ -201,13 +226,14 @@ Resources:
       CodeUri: sendmessage/
       Handler: app.handler
       MemorySize: 256
+      Timeout: 30
       Runtime: nodejs12.x
       Environment:
         Variables:
           TABLE_NAME: !Ref TableName
       Policies:
       - DynamoDBCrudPolicy:
-          TableName: !Ref TableName
+          TableName: "*"
       - Statement:
         - Effect: Allow
           Action:
