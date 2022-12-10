@@ -15,12 +15,6 @@ Parameters:
     MaxLength: 50
     AllowedPattern: ^[A-Za-z_]+$
     ConstraintDescription: 'Required. Can be characters and underscore only. No numbers or special characters allowed.'
-  # VPC:
-  #   Description: The VPC for Lambda function and ElastiCache.
-  #   Type: AWS::EC2::VPC::Id
-  # Subnets:
-  #   Description: The Subnets for Lambda function and ElastiCache.
-  #   Type: List<AWS::EC2::Subnet::Id>
 
 Resources:
   PlaceWebSocket:
@@ -140,7 +134,6 @@ Resources:
       #   ReadCapacityUnits: 5
       #   WriteCapacityUnits: 5
       BillingMode: PAY_PER_REQUEST
-      # TableName: !Ref 'AWS::StackName'
       TableName: 'UpdateHistory'
       StreamSpecification:
         StreamViewType: NEW_IMAGE
@@ -158,23 +151,9 @@ Resources:
       #   ReadCapacityUnits: 5
       #   WriteCapacityUnits: 5
       BillingMode: PAY_PER_REQUEST
-      # TableName: !Ref 'AWS::StackName'
       TableName: 'Bitmap'
       StreamSpecification:
         StreamViewType: NEW_IMAGE
-
-
-
-  # ElastiCacheSecurityGroup:
-  #   Type: AWS::EC2::SecurityGroup
-  #   Properties:
-  #     GroupDescription: Elasticache Security Group
-  #     VpcId: !Ref 'VPC'
-  #     SecurityGroupIngress:
-  #       - IpProtocol: tcp
-  #         FromPort: '6379'
-  #         ToPort: '6379'
-  #         SourceSecurityGroupId: !Ref 'LambdaSecurityGroup'
 
   OnConnectFunction:
     Type: AWS::Serverless::Function
@@ -248,7 +227,6 @@ Resources:
       Action: lambda:InvokeFunction
       FunctionName: !Ref SendMessageFunction
       Principal: apigateway.amazonaws.com
-
 
 
 
