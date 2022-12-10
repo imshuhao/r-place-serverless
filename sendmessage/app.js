@@ -45,29 +45,7 @@ function chunkSubstr(str, size) {
 
 //==========Send Board
 
-async function sendBoard (row, ddb, apigwManagementApi, event) {
-  // var params = {
-  //   TableName : 'Bitmap',
-  //   Key: {
-  //     board_row: row
-  //   }
-  // };
-
-  // const data = await ddb.scan({ TableName: "Bitmap", ProjectionExpression: 'board_row, row_bit' }).promise();
-  // const data = await ddb.get(params).promise();
-  // var row_data = data.Item.row_bit;
-  // var row = data.Item.board_row;
-  // console.log(typeof row_data);
-  // console.log(row_data);
-  // let test = Buffer.from(row_data);
-  // console.log(typeof test)
-  // console.log(test)
-
-  
-  
-  // var blob = Buffer.from( rows.map(row => row.row_bit) );
-  // console.log(blob)
-  
+async function sendBoard (ddb, apigwManagementApi, event) {
   const data_all = await ddb.scan({ TableName: "Bitmap", ProjectionExpression: 'board_row, row_bit' }).promise();
   var data_all_item = data_all.Items;
   
@@ -94,7 +72,7 @@ async function sendBoard (row, ddb, apigwManagementApi, event) {
     }).promise();
   }
 
-  return { statusCode: 200, body: 'Data sent.' };
+  return { statusCode: 200, body: 'Board data sent.' };
 }
 
 
@@ -115,39 +93,74 @@ exports.handler = async event => {
   });
   
   const body = JSON.parse(event.body);
-  // const postData = body.data;
-  // console.log(JSON.parse(event.body))
+  var row = Math.floor(body.position/1000);
+  var col = body.position%1000;
+  var color = body.color;
 
   const putData = {
     TableName: OP_DB,
     Item: {
-      connID: event.requestContext.messageId,
+      connID: event.requestContext.connectionId,
       timestamp: Date.now(),
       color: body.color,
       position: body.position
     }
   };
-    console.log(putData);
 
   try {
     ddb.put(putData, (e, d) => {
       if(e) console.log(e);
-      else console.log("Updated");
+      else console.log("stored to Operations");
     });
   } catch (err) {
-    return { statusCode: 500, body: 'Failed to store data: ' + JSON.stringify(err)};
+    return { statusCode: 500, body: 'Failed to store to Operations: ' + JSON.stringify(err)};
   }
-
-
 
   if(body.init) {
     initDB(ddb);
   }
   
+  
   if (body.giveMeData) {
-    return sendBoard(body.getRow, ddb, apigwManagementApi, event);
+    return sendBoard(ddb, apigwManagementApi, event);
   }
   
+
+
+
+
+
+
+  var getRowData = {
+    TableName : 'Bitmap',
+    Key: {
+      board_row: row
+    }
+  };
+  const rowDataEntry = await ddb.get(getRowData).promise();
+  var rowBit = rowDataEntry.Item.row_bit;
+  console.log("before: "+rowBit);
+  rowBit[col] = color;
+  console.log("after: "+rowBit);
+
+  var putRowData = {
+    TableName: 'Bitmap',
+    Item: {
+      board_row: row,
+      row_bit: rowBit
+    }
+  };
+
+  try {
+    ddb.put(putRowData, (e, d) => {
+      if(e) console.log(e);
+      else console.log("stored to Bitmap");
+    });
+  } catch (err) {
+    return { statusCode: 500, body: 'Failed to store to Bitmap: ' + JSON.stringify(err)};
+  }
+
+
 
 
   const postCalls = connectionData.Items.map(async ({ connectionId }) => {

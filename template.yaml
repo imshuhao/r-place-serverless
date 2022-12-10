@@ -129,12 +129,12 @@ Resources:
       AttributeDefinitions:
         - AttributeName: "connID"
           AttributeType: "S"
-        - AttributeName: "timestamp"
+        - AttributeName: "ts"
           AttributeType: "N"
       KeySchema:
         - AttributeName: "connID"
           KeyType: "HASH"
-        - AttributeName: "timestamp"
+        - AttributeName: "ts"
           KeyType: "RANGE"
       # ProvisionedThroughput:
       #   ReadCapacityUnits: 5
