@@ -1,0 +1,11 @@
+version = 0.1
+[default]
+[default.deploy]
+[default.deploy.parameters]
+stack_name = "r-place"
+s3_bucket = "aws-sam-cli-managed-default-samclisourcebucket-13bgvruqnlmy6"
+s3_prefix = "r-place"
+region = "us-east-2"
+capabilities = "CAPABILITY_IAM"
+parameter_overrides = "TableName=\"app_connections\""
+image_repositories = []
