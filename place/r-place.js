@@ -30,27 +30,41 @@ function getXY(pos) {
     }
 }
 
+
 function initBoard(start, bitmap) {
     console.log("initBoard, start: " + start + ", bitmap.length: " + bitmap.length);
     let context = document.getElementById('canvas').getContext('2d');
+    // let x = start % 1000;
+    // let y = Math.floor(start / 1000);
     for (let i = 0; i < bitmap.length; i++) {
         let color = bitmap[i];
         let {x, y} = getXY(start + i);
         context.fillStyle = colorMap[color];
         context.fillRect(x, y, 1, 1);
     }
+    // console.log(bitmap.length);
+    // for (let i = 0; i < 1000; i++) {
+    //     for (let j = 0; j < 1000; j++) {
+    //         let index = i * 1000 + j;
+    //         let color = bitmap[index];
+    //         context.fillStyle = colorMap[color];
+    //         context.fillRect(j, i, 1, 1);
+    //     }
+    // }
 }
 
 $(function(){
+    // socket = new WebSocket("ws://"+window.location.hostname+":8081");
     socket = new WebSocket("wss://0jr8jctd81.execute-api.us-east-2.amazonaws.com/Prod");
     socket.onopen = async function (event) {
         $('#sendButton').removeAttr('disabled');
         console.log("connected, sending hello");
-        var initPayload = {
+        var payload = {
             "action":"sendmessage",
             "giveMeData": 1
         }
-        socket.send(JSON.stringify(initPayload));
+        socket.send(JSON.stringify(payload));
+        // await new Promise(r => setTimeout(r, 100));
     };
     socket.onclose = function (event) {
         alert("closed code: " + event.code + "\nreason: " +event.reason + "\nwasClean: "+event.wasClean);
@@ -66,8 +80,19 @@ $(function(){
             let chunk = Uint8Array.from(atob(body), c => c.charCodeAt(0));
             initBoard(curr_pos, chunk);
             curr_pos += chunk.length;
+
+            // bitmap_str = bitmap_str.concat(event.data);
+            // console.log(bitmap_str.length);
+            // if (bitmap_str.endsWith("--EOF--")) {
+            //     console.log("got all data");
+            //     bitmap_str = bitmap_str.slice(0, -7);
+            //     initBoard(Uint8Array.from(atob(bitmap_str), c => c.charCodeAt(0)));
+            //     initFinished = true;
+            //     delete bitmap_str;
+            //     return;
+            // }
         }
-        else if (body.startsWith("COOLDOWN")){
+        else if (body.startsWith("COOLDOWN ")){
             alert("You are on cooldown for " + body.slice(9) + " seconds");
         }
         else{
@@ -78,13 +103,27 @@ $(function(){
             context.fillStyle = colorMap[o.color];
             context.fillRect(x, y, 1, 1);
         }
-    };
+    }
+
+    // Comment out the event handler below when in production
+    $('#canvas').click(function(event){
+        var x=event.pageX-this.offsetLeft;
+        var y=event.pageY-this.offsetTop;
+        var payload = { 
+            "action":"sendmessage",
+            "color": $('#color').val() ? parseInt($('#color').val()) : 15,
+            // "position": parseInt($('#x').val()) + parseInt($('#y').val()) * 1000
+            "position": x + y * 1000
+        };
+        socket.send(JSON.stringify(payload));
+    });
     $('#setForm').submit(function( event ) {
         var payload = {
             "action":"sendmessage",
             "color": parseInt($('#color').val()),
             "position": parseInt($('#x').val()) + parseInt($('#y').val()) * 1000
         };
+        // console.log(payload);
         socket.send(JSON.stringify(payload));
         event.preventDefault();
     });

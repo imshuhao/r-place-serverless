@@ -136,7 +136,7 @@ exports.handler = async event => {
     if (timestamps.Count !== 0) {
       await apigwManagementApi.postToConnection({ 
         ConnectionId: event.requestContext.connectionId, 
-        Data: "COOLDOWN " + (timestamps.Items[0].ts - tsNow + 15000)/1000
+        Data: "COOLDOWN " + (timestamps.Items[0].ts - tsNow + 300000)/1000
       }).promise();
       return { statusCode: 403, body: 'Cooldown'};
     }
