@@ -1,0 +1,98 @@
+Members: dongshu4, zhan6104
+
+Best of (30% & 70%) or (30% & 40% & 30%)
+
+Report (weight 30%): 22/22
+
+	7/7 Outline your architecture
+		[1] All tools listed and justified
+		[1] Explain why Tool1 used was appropriate for the task
+		[1] Explain why Tool2 used was appropriate for the task
+		[1] Explain why Tool3 used was appropriate for the task
+		[1] System diagram is present
+		[1] System diagram explains parts of the system, at least somewhat clear
+		[1] System diagram is excellent, a great guide to the system, clearly explains it all in appropriate detail
+
+	5/5 Explain how tools interact with each other
+		[1] Some explanation of individual tools interaction
+		[1] Some explanation of tools interacting on critical functions
+		[1] Great explanation of tools interacting on critical functions
+		[1] Explanation of interaction for initial board load
+		[1] Explanation of interaction for update, including broadcasting
+
+	6/6 Justify Design (we mark 3 system strengths)
+		[1] Strength 1 listed
+		[1] Strength 1 justified/explained
+		[1] Strength 2 listed
+		[1] Strength 2 justified/explained
+		[1] Strength 3 listed
+		[1] Strength 3 justified/explained
+
+	4/4 Justify Design (we mark 2 system weaknesses)
+		[1] Weakness 1 listed
+		[1] Weakness 1 justified/explained
+		[1] Weakness 2 listed
+		[1] Weakness 2 justified/explained
+
+	Strengths and weaknesses can be taken from:
+		Consistency
+		Availability
+		Partition tolerance
+		Load balancing
+		Caching
+		Disaster recovery
+		Orchestration
+		Monitoring
+		Horizontal scalability
+		Vertical scalability
+		Security & Permissions
+		Latency/Throughput
+		Persistence
+		Number of simultaneous clients
+		…
+
+	0/2 Discussing the system's performance [BONUS]
+		[0] Graph showing performance of system under load1
+		[0] Analysis of system performance under load1
+
+Demo (weight 40%): 15/15
+
+	6/6 Functionality
+		[1] 1 Board is loaded when the site is visited
+		[1] 1 1000x1000 board is implemented
+		[1] 1 Supports at least 16 colors
+		[1] 1 Full board is loaded under 3 seconds
+		[0] 1 Full board is loaded under 1 seconds [BONUS]
+		[1] 1 Board updates are broadcasted to all active users
+			. Refreshing the board periodically is not acceptable
+		[1] 1 Spam protection. Users are limited to 1 request per 5 mins (or any other defined time period)
+
+	1/1 Monitoring
+		[1] 1 Tools monitor some or all components of the system
+
+	1/1 Availability
+		[1] 1 Show the system running in 2 availability zones
+
+	2/2 Security & Permissions
+		[1] 1 Show & discuss the IAM roles used
+		[1] 1 Show & discuss subnets used
+			. If applicable. Some designs might not require subnets. In this case, students must discuss why that is the case
+
+	4/4 Orchestration
+		[1] 1 Automate launching the system
+		[1] 1 Automate scaling up the system
+			. Students with serverless architecture must explain how their system detects and adapts to spikes in performance. If they do not know, they only get 0.5
+		[1] 1 Automate scaling down the system
+			. Same as above
+		[1] 1 Automate shutdowning the system
+
+	1/1 Design quality
+		Groups of 2 at least 6-7 tools
+		Groups of 3 at least 10-11 tools
+		[1] 1 Meet the requirements above
+
+	0/2 Creativity [BONUS]
+		[0] 2 Additional features beyond the url shortner canvas application
+			. Heatmap
+			. Timelapse
+			. Other
